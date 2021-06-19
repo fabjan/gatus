@@ -10,6 +10,9 @@ type Config struct {
 	// File is the path of the file to use for persistence
 	// If blank, file persistence is disabled.
 	File string `yaml:"file"`
+	// PostgresTable is the name of the database table to use for persistence
+	// If blank, database persistence is disabled.
+	PostgresTable string `yaml:"postgres-table"`
 	// AutoSaveInterval is the interval between persisting status information
 	AutoSaveInterval time.Duration `yaml:"auto-save-interval"`
 }

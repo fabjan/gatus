@@ -3,6 +3,7 @@ package store
 import (
 	"github.com/TwinProduction/gatus/core"
 	"github.com/TwinProduction/gatus/storage/store/memory"
+	"github.com/TwinProduction/gatus/storage/store/postgres"
 )
 
 // Store is the interface that each stores should implement
@@ -35,4 +36,5 @@ type Store interface {
 var (
 	// Validate interface implementation on compile
 	_ Store = (*memory.Store)(nil)
+	_ Store = (*postgres.Store)(nil)
 )
