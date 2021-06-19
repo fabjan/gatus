@@ -23,7 +23,7 @@ func TestServiceStatus_AddResult(t *testing.T) {
 	service := &Service{Name: "name", Group: "group"}
 	serviceStatus := NewServiceStatus(service)
 	for i := 0; i < MaximumNumberOfResults+10; i++ {
-		serviceStatus.AddResult(&Result{Timestamp: time.Now()})
+		serviceStatus.ObserveResult(&Result{Timestamp: time.Now()})
 	}
 	if len(serviceStatus.Results) != MaximumNumberOfResults {
 		t.Errorf("expected serviceStatus.Results to not exceed a length of %d", MaximumNumberOfResults)
@@ -34,7 +34,7 @@ func TestServiceStatus_WithResultPagination(t *testing.T) {
 	service := &Service{Name: "name", Group: "group"}
 	serviceStatus := NewServiceStatus(service)
 	for i := 0; i < 25; i++ {
-		serviceStatus.AddResult(&Result{Timestamp: time.Now()})
+		serviceStatus.ObserveResult(&Result{Timestamp: time.Now()})
 	}
 	if len(serviceStatus.WithResultPagination(1, 1).Results) != 1 {
 		t.Errorf("expected to have 1 result")

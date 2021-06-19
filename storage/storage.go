@@ -25,6 +25,7 @@ var (
 func Get() store.Store {
 	if !initialized {
 		log.Println("[storage][Get] Provider requested before it was initialized, automatically initializing")
+		// TODO should this be disallowed? It's using an empty config.
 		err := Initialize(nil)
 		if err != nil {
 			panic("failed to automatically initialize store: " + err.Error())
@@ -35,12 +36,16 @@ func Get() store.Store {
 
 // Initialize instantiates the storage provider based on the Config provider
 func Initialize(cfg *Config) error {
+	// initialize can happen multiple times, e.g. if the config file is updated,
+	// but we only need to track if it happened at least once
 	initialized = true
+
 	var err error
 	if cancelFunc != nil {
 		// Stop the active autoSave task
 		cancelFunc()
 	}
+	// TODO select file or database store here
 	if cfg == nil || len(cfg.File) == 0 {
 		log.Println("[storage][Initialize] Creating storage provider")
 		provider, _ = memory.NewStore("")
@@ -51,7 +56,7 @@ func Initialize(cfg *Config) error {
 		if err != nil {
 			return err
 		}
-		go autoSave(7*time.Minute, ctx)
+		go autoSave(cfg.AutoSaveInterval, ctx)
 	}
 	return nil
 }

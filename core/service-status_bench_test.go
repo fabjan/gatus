@@ -83,7 +83,7 @@ func BenchmarkServiceStatus_WithResultPagination(b *testing.B) {
 	service := &testService
 	serviceStatus := NewServiceStatus(service)
 	for i := 0; i < MaximumNumberOfResults; i++ {
-		serviceStatus.AddResult(&testSuccessfulResult)
+		serviceStatus.ObserveResult(&testSuccessfulResult)
 	}
 	for n := 0; n < b.N; n++ {
 		serviceStatus.WithResultPagination(1, 20)

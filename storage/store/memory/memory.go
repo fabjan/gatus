@@ -68,7 +68,7 @@ func (s *Store) Insert(service *core.Service, result *core.Result) {
 	if !exists {
 		serviceStatus = core.NewServiceStatus(service)
 	}
-	serviceStatus.(*core.ServiceStatus).AddResult(result)
+	serviceStatus.(*core.ServiceStatus).ObserveResult(result)
 	s.cache.Set(key, serviceStatus)
 }
 

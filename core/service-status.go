@@ -28,7 +28,7 @@ type ServiceStatus struct {
 	// Results is the list of service evaluation results
 	Results []*Result `json:"results"`
 
-	// Events is a list of events
+	// Events is a list of status change events
 	//
 	// We don't expose this through JSON, because the main dashboard doesn't need to have this data.
 	// However, the detailed service page does leverage this by including it to a map that will be
@@ -81,28 +81,10 @@ func (ss ServiceStatus) WithResultPagination(page, pageSize int) *ServiceStatus 
 	return &shallowCopy
 }
 
-// AddResult adds a Result to ServiceStatus.Results and makes sure that there are
-// no more than 20 results in the Results slice
-func (ss *ServiceStatus) AddResult(result *Result) {
-	if len(ss.Results) > 0 {
-		// Check if there's any change since the last result
-		// OR there's only 1 event, which only happens when there's a start event
-		if ss.Results[len(ss.Results)-1].Success != result.Success || len(ss.Events) == 1 {
-			event := &Event{Timestamp: result.Timestamp}
-			if result.Success {
-				event.Type = EventHealthy
-			} else {
-				event.Type = EventUnhealthy
-			}
-			ss.Events = append(ss.Events, event)
-			if len(ss.Events) > MaximumNumberOfEvents {
-				// Doing ss.Events[1:] would usually be sufficient, but in the case where for some reason, the slice has
-				// more than one extra element, we can get rid of all of them at once and thus returning the slice to a
-				// length of MaximumNumberOfEvents by using ss.Events[len(ss.Events)-MaximumNumberOfEvents:] instead
-				ss.Events = ss.Events[len(ss.Events)-MaximumNumberOfEvents:]
-			}
-		}
-	}
+// ObserveResult updates the Results, Events and Uptime of the ServiceStatus and
+// makes sure they don't grow beyond MaximumNumberOfResults and MaximumNumberOfEvents
+func (ss *ServiceStatus) ObserveResult(result *Result) {
+	ss.updateEvents(result)
 	ss.Results = append(ss.Results, result)
 	if len(ss.Results) > MaximumNumberOfResults {
 		// Doing ss.Results[1:] would usually be sufficient, but in the case where for some reason, the slice has more
@@ -112,3 +94,27 @@ func (ss *ServiceStatus) AddResult(result *Result) {
 	}
 	ss.Uptime.ProcessResult(result)
 }
+
+func (ss *ServiceStatus) updateEvents(result *Result) {
+	if len(ss.Results) <= 0 {
+		return
+	}
+	// Check if there's any change since the last result
+	// OR there's only 1 event, which only happens when there's a start event
+	if ss.Results[len(ss.Results)-1].Success != result.Success || len(ss.Events) == 1 {
+		event := &Event{Timestamp: result.Timestamp}
+		if result.Success {
+			event.Type = EventHealthy
+		} else {
+			event.Type = EventUnhealthy
+		}
+		ss.Events = append(ss.Events, event)
+		if len(ss.Events) > MaximumNumberOfEvents {
+			// Doing ss.Events[1:] would usually be sufficient, but in the case where for some reason, the slice has
+			// more than one extra element, we can get rid of all of them at once and thus returning the slice to a
+			// length of MaximumNumberOfEvents by using ss.Events[len(ss.Events)-MaximumNumberOfEvents:] instead
+			ss.Events = ss.Events[len(ss.Events)-MaximumNumberOfEvents:]
+		}
+	}
+}
+
